@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-enum Gender { lakiLaki, perempuan }
-
 class BMIScreen extends StatefulWidget {
   const BMIScreen({super.key});
 
@@ -13,12 +11,10 @@ class _BMIScreenState extends State<BMIScreen> {
   final _bbController = TextEditingController();
   final _tbController = TextEditingController();
 
-  Gender _gender = Gender.lakiLaki;
   double? _hasilBMI;
   String _pesan = 'Masukkan Data Anda!!!';
 
-  (String, Color) _kategori(double bmi) {
-    final bool pria = _gender == Gender.lakiLaki;
+  (String, Color) _kategori(double bmi, {required bool pria}) {
     final double batasKurus = pria ? 18 : 17;
     final double batasIdeal = pria ? 25 : 23;
     const double batasGemuk = 27;
@@ -66,14 +62,66 @@ class _BMIScreenState extends State<BMIScreen> {
     super.dispose();
   }
 
+  Widget _kartuHasil({
+    required String judul,
+    required IconData ikon,
+    required double? bmi,
+    required bool pria,
+  }) {
+    final (String, Color)? kategori =
+        bmi == null ? null : _kategori(bmi, pria: pria);
+    final Color warna = kategori?.$2 ?? Colors.brown;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: warna.withValues(alpha: 0.12),
+        border: Border.all(color: warna, width: 2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(ikon, size: 20, color: warna),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  judul,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            bmi?.toStringAsFixed(1) ?? '--',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: warna,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            kategori?.$1 ?? _pesan,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: warna,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double? hasil = _hasilBMI;
-    final (String, Color)? kategori = hasil == null ? null : _kategori(hasil);
-    final Color warna = kategori?.$2 ?? Colors.brown;
-    final String labelGender =
-        _gender == Gender.lakiLaki ? 'Laki-laki' : 'Perempuan';
-
     return Scaffold(
       backgroundColor: Colors.brown.shade50,
       appBar: AppBar(
@@ -102,38 +150,10 @@ class _BMIScreenState extends State<BMIScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'Jenis Kelamin',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 10),
-                      SegmentedButton<Gender>(
-                        segments: const [
-                          ButtonSegment(
-                            value: Gender.lakiLaki,
-                            icon: Icon(Icons.male),
-                            label: Text('Laki-laki'),
-                          ),
-                          ButtonSegment(
-                            value: Gender.perempuan,
-                            icon: Icon(Icons.female),
-                            label: Text('Perempuan'),
-                          ),
-                        ],
-                        selected: {_gender},
-                        style: SegmentedButton.styleFrom(
-                          selectedBackgroundColor: Colors.brown,
-                          selectedForegroundColor: Colors.white,
-                        ),
-                        onSelectionChanged: (pilihan) =>
-                            setState(() => _gender = pilihan.first),
-                      ),
-                      const SizedBox(height: 20),
                       TextField(
                         controller: _bbController,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.monitor_weight),
                           labelText: 'Berat Badan',
@@ -146,15 +166,16 @@ class _BMIScreenState extends State<BMIScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.brown, width: 2),
+                            borderSide:
+                                const BorderSide(color: Colors.brown, width: 2),
                           ),
                         ),
                       ),
                       const SizedBox(height: 15),
                       TextField(
                         controller: _tbController,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.height),
                           labelText: 'Tinggi Badan',
@@ -167,7 +188,8 @@ class _BMIScreenState extends State<BMIScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.brown, width: 2),
+                            borderSide:
+                                const BorderSide(color: Colors.brown, width: 2),
                           ),
                         ),
                       ),
@@ -211,47 +233,28 @@ class _BMIScreenState extends State<BMIScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: warna.withValues(alpha: 0.12),
-                  border: Border.all(color: warna, width: 2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      hasil == null
-                          ? 'Hasil BMI'
-                          : 'Hasil BMI ($labelGender)',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _kartuHasil(
+                      judul: 'Laki-laki',
+                      ikon: Icons.male,
+                      bmi: _hasilBMI,
+                      pria: true,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      hasil?.toStringAsFixed(1) ?? '--',
-                      style: TextStyle(
-                        fontSize: 56,
-                        fontWeight: FontWeight.bold,
-                        color: warna,
-                      ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _kartuHasil(
+                      judul: 'Perempuan',
+                      ikon: Icons.female,
+                      bmi: _hasilBMI,
+                      pria: false,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      kategori?.$1 ?? _pesan,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: warna,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
